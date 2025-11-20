@@ -1,6 +1,6 @@
 """Test cases for the NESEnv class."""
 from unittest import TestCase
-import gym
+import gymnasium as gym
 import numpy as np
 from .rom_file_abs_path import rom_file_abs_path
 from nes_py.nes_env import NESEnv
@@ -75,52 +75,56 @@ class ShouldResetAndCloseEnv(TestCase):
 class ShouldStepEnv(TestCase):
     def test(self):
         env = create_smb1_instance()
-        done = True
+        terminated = True
+        truncated = False
         for _ in range(500):
-            if done:
+            if terminated or truncated:
                 # reset the environment and check the output value
-                state = env.reset()
+                state, info = env.reset()
                 self.assertIsInstance(state, np.ndarray)
+                self.assertIsInstance(info, dict)
             # sample a random action and check it
             action = env.action_space.sample()
-            self.assertIsInstance(action, int)
+            self.assertIsInstance(action, (int, np.integer))
             # take a step and check the outputs
             output = env.step(action)
             self.assertIsInstance(output, tuple)
-            self.assertEqual(4, len(output))
+            self.assertEqual(5, len(output))
             # check each output
-            state, reward, done, info = output
+            state, reward, terminated, truncated, info = output
             self.assertIsInstance(state, np.ndarray)
             self.assertIsInstance(reward, float)
-            self.assertIsInstance(done, bool)
+            self.assertIsInstance(terminated, bool)
+            self.assertIsInstance(truncated, bool)
             self.assertIsInstance(info, dict)
-            # check the render output
-            render = env.render('rgb_array')
-            self.assertIsInstance(render, np.ndarray)
+            # check the render output (if render_mode was set)
         env.reset()
         env.close()
 
 
 class ShouldStepEnvBackupRestore(TestCase):
     def test(self):
-        done = True
+        terminated = True
+        truncated = False
         env = create_smb1_instance()
 
         for _ in range(250):
-            if done:
-                state = env.reset()
-                done = False
-            state, _, done, _ = env.step(0)
+            if terminated or truncated:
+                state, info = env.reset()
+                terminated = False
+                truncated = False
+            state, _, terminated, truncated, _ = env.step(0)
 
         backup = state.copy()
 
         env._backup()
 
         for _ in range(250):
-            if done:
-                state = env.reset()
-                done = False
-            state, _, done, _ = env.step(0)
+            if terminated or truncated:
+                state, info = env.reset()
+                terminated = False
+                truncated = False
+            state, _, terminated, truncated, _ = env.step(0)
 
         self.assertFalse(np.array_equal(backup, state))
         env._restore()

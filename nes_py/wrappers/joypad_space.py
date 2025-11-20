@@ -1,7 +1,7 @@
 """An environment wrapper to convert binary to discrete action space."""
-import gym
-from gym import Env
-from gym import Wrapper
+import gymnasium as gym
+from gymnasium import Env
+from gymnasium import Wrapper
 
 
 class JoypadSpace(Wrapper):
@@ -66,16 +66,27 @@ class JoypadSpace(Wrapper):
             a tuple of:
             - (numpy.ndarray) the state as a result of the action
             - (float) the reward achieved by taking the action
-            - (bool) a flag denoting whether the episode has ended
+            - (bool) terminated flag denoting whether the episode has ended
+            - (bool) truncated flag denoting whether the episode was cut off
             - (dict) a dictionary of extra information
 
         """
         # take the step and record the output
         return self.env.step(self._action_map[action])
 
-    def reset(self):
-        """Reset the environment and return the initial observation."""
-        return self.env.reset()
+    def reset(self, seed=None, options=None):
+        """
+        Reset the environment and return the initial observation.
+
+        Args:
+            seed (int): optional random seed
+            options (dict): optional reset options
+
+        Returns:
+            observation (np.ndarray): initial observation
+            info (dict): auxiliary information
+        """
+        return self.env.reset(seed=seed, options=options)
 
     def get_keys_to_action(self):
         """Return the dictionary of keyboard keys to actions."""
