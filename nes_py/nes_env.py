@@ -254,7 +254,8 @@ class NESEnv(gym.Env):
         # set the done flag to false
         self.done = False
         # return the screen from the emulator and info dict
-        return self.screen, {}
+        info = self._get_info
+        return self.screen, info
 
     def _did_reset(self):
         """Handle any RAM hacking after a reset occurs."""
